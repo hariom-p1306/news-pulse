@@ -1,35 +1,52 @@
 from flask import Flask, jsonify
-import subprocess
-import sys
+import threading
+
+from main import run_ingestion
 
 app = Flask(__name__)
 
+running = False
+
+
 @app.route("/")
 def home():
+
     return jsonify({
         "message": "News Pulse Scraper API Running"
     })
 
+
 @app.route("/run", methods=["POST"])
-def run_scraper():
-    try:
-        result = subprocess.run(
-            [sys.executable, "main.py"],
-            capture_output=True,
-            text=True
-        )
+def run():
 
-        return jsonify({
-            "success": True,
-            "output": result.stdout,
-            "error": result.stderr
-        })
+    global running
 
-    except Exception as e:
+    if running:
+
         return jsonify({
             "success": False,
-            "message": str(e)
-        }), 500
+            "message": "Scraper already running"
+        }), 409
+
+    def worker():
+
+        global running
+
+        running = True
+
+        try:
+            run_ingestion()
+        except Exception as e:
+            print(e)
+
+        running = False
+
+    threading.Thread(target=worker).start()
+
+    return jsonify({
+        "success": True,
+        "message": "Scraper started successfully"
+    })
 
 
 if __name__ == "__main__":

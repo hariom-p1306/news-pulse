@@ -1,9 +1,6 @@
 import sys
 import feedparser
 
-# Fix Windows UTF-8 Encoding
-sys.stdout.reconfigure(encoding="utf-8")
-
 from rss import rss_feeds
 from extractor import extract_article
 from database import (
@@ -12,99 +9,75 @@ from database import (
 )
 from cluster import cluster_articles
 
-articles = []
 
-# ----------------------------------------------------
-# Fetch Latest Articles
-# ----------------------------------------------------
-for feed_info in rss_feeds:
+def run_ingestion():
 
-    print(f"\nFetching {feed_info['name']}...")
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+    except:
+        pass
 
-    feed = feedparser.parse(feed_info["url"])
+    articles = []
 
-    for article in feed.entries:
+    print("Starting ingestion...")
 
-        link = article.get("link", "")
+    # ----------------------------
+    # Fetch Articles
+    # ----------------------------
+    for feed_info in rss_feeds:
 
-        if not link:
-            continue
+        print(f"Fetching {feed_info['name']}")
 
-        # Skip duplicate articles
-        existing_article = articles_collection.find_one({
-            "link": link
-        })
+        feed = feedparser.parse(feed_info["url"])
 
-        if existing_article:
-            print("Duplicate Skipped")
-            continue
+        for article in feed.entries:
 
-        # Extract Full Content
-        content = extract_article(link)
+            link = article.get("link", "")
 
-        article_data = {
-            "source": feed_info["name"],
-            "title": article.get("title", "No Title"),
-            "link": link,
-            "published": article.get("published", "No Date"),
-            "summary": article.get("summary", "No Summary"),
-            "content": content
-        }
+            if not link:
+                continue
 
-        # Save into MongoDB
-        articles_collection.insert_one(article_data)
+            if articles_collection.find_one({"link": link}):
+                continue
 
-        articles.append(article_data)
+            content = extract_article(link)
 
-        print(f"Saved : {article_data['title']}")
+            article_data = {
+                "source": feed_info["name"],
+                "title": article.get("title", "No Title"),
+                "link": link,
+                "published": article.get("published", "No Date"),
+                "summary": article.get("summary", ""),
+                "content": content
+            }
 
-print("\n" + "=" * 80)
-print(f"Total New Articles Saved : {len(articles)}")
-print("=" * 80)
+            articles_collection.insert_one(article_data)
 
-# ----------------------------------------------------
-# Create Topic Clusters
-# ----------------------------------------------------
+            articles.append(article_data)
 
-print("\nCreating Topic Clusters...\n")
+    print(f"New Articles : {len(articles)}")
 
-# Fetch ALL articles from MongoDB
-all_articles = list(
-    articles_collection.find(
-        {},
-        {"_id": 0}
+    # ----------------------------
+    # Clustering
+    # ----------------------------
+
+    all_articles = list(
+        articles_collection.find({}, {"_id": 0})
     )
-)
 
-print(f"Total Articles in Database : {len(all_articles)}")
-
-if len(all_articles) == 0:
-
-    print("No articles found.")
-
-else:
+    if len(all_articles) == 0:
+        print("No articles found.")
+        return
 
     clusters = cluster_articles(all_articles)
 
-    # Remove previous clusters
     clusters_collection.delete_many({})
 
-    # Save new clusters
     for cluster in clusters:
-
         clusters_collection.insert_one(cluster)
 
-        print("=" * 80)
-        print(f"Cluster ID   : {cluster['cluster_id']}")
-        print(f"Label        : {cluster['label']}")
-        print(f"Articles     : {cluster['article_count']}")
-        print(f"Start Time   : {cluster['start_time']}")
-        print(f"End Time     : {cluster['end_time']}")
-        print("-" * 80)
+    print("Clustering Completed")
 
-        for article in cluster["articles"]:
-            print(f"- {article['title']}")
 
-        print("=" * 80)
-
-print("\nTopic Clusters Saved Successfully!")
+if __name__ == "__main__":
+    run_ingestion()
