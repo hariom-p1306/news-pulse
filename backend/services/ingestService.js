@@ -1,63 +1,46 @@
-import { spawn } from "child_process";
-import path from "path";
+import axios from "axios";
 
 const jobs = {};
 
-export const triggerIngestion = (req, res) => {
+export const triggerIngestion = async (req, res) => {
 
     const jobId = Date.now().toString();
 
     jobs[jobId] = {
-        status: "running"
+        status: "running",
+        startedAt: new Date()
     };
 
-    // Python Virtual Environment
-    const pythonPath = path.join(
-        process.cwd(),
-        "../scraper/venv/Scripts/python.exe"
-    );
+    try {
 
-    // main.py
-    const pythonFile = path.join(
-        process.cwd(),
-        "../scraper/main.py"
-    );
+        const response = await axios.post(
+            "https://news-pulse-1-hcic.onrender.com/run"
+        );
 
-    console.log("Python:", pythonPath);
-    console.log("Script:", pythonFile);
+        jobs[jobId].status = "completed";
+        jobs[jobId].completedAt = new Date();
 
-    const processRunner = spawn(
-        pythonPath,
-        [pythonFile],
-        {
-            cwd: path.join(process.cwd(), "../scraper")
-        }
-    );
+        res.status(200).json({
+            success: true,
+            jobId,
+            status: jobs[jobId].status,
+            scraperResponse: response.data
+        });
 
-    processRunner.stdout.on("data", (data) => {
-        console.log(data.toString());
-    });
+    } catch (error) {
 
-    processRunner.stderr.on("data", (data) => {
-        console.error(data.toString());
+        console.error(error.message);
+
         jobs[jobId].status = "failed";
-    });
 
-    processRunner.on("close", (code) => {
+        res.status(500).json({
+            success: false,
+            jobId,
+            status: jobs[jobId].status,
+            message: error.message
+        });
 
-        console.log("Python exited:", code);
-
-        if (jobs[jobId].status !== "failed") {
-            jobs[jobId].status = "completed";
-        }
-
-    });
-
-    res.status(200).json({
-        success: true,
-        jobId,
-        status: jobs[jobId].status
-    });
+    }
 
 };
 
@@ -66,11 +49,14 @@ export const getJobStatus = (req, res) => {
     const job = jobs[req.params.jobId];
 
     if (!job) {
+
         return res.status(404).json({
+            success: false,
             message: "Job not found"
         });
+
     }
 
-    res.json(job);
+    res.status(200).json(job);
 
 };
