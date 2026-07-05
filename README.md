@@ -10,7 +10,7 @@ This project was developed as part of the **Xponentium Full Stack Developer Inte
 
 ## Frontend
 
-https://your-vercel-url.vercel.app
+https://news-pulse-zeta-azure.vercel.app/
 
 ## Backend API
 
