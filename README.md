@@ -1,58 +1,69 @@
 # 📰 News Pulse – Topic Clustered News Timeline
 
-A full-stack news aggregation system that fetches live news from multiple RSS feeds, extracts complete articles, groups related articles into topic clusters, and visualizes them on an interactive timeline.
+News Pulse is a full-stack news aggregation platform that fetches the latest news from multiple RSS feeds, extracts complete article content, groups related articles into topic clusters using Machine Learning, and visualizes them on an interactive timeline.
 
-This project was built as part of the **Xponentium Full Stack Developer Internship Assessment**.
-
----
-
-# Live Demo
-
-Frontend:
-> Add after deployment
-
-Backend API:
-> Add after deployment
-
-Video Walkthrough:
-> Add Loom/YouTube link after recording
+This project was developed as part of the **Xponentium Full Stack Developer Internship Assessment**.
 
 ---
 
-# Project Architecture
+# 🚀 Live Demo
+
+## Frontend
+
+https://your-vercel-url.vercel.app
+
+## Backend API
+
+https://news-pulse-sie3.onrender.com
+
+## Python Scraper API
+
+https://news-pulse-1-hcic.onrender.com
+
+---
+
+# 📹 Video Walkthrough
+
+Add your Loom or YouTube walkthrough link here.
+
+---
+
+# 🏗️ Project Architecture
 
 ```
-                RSS Feeds
-      (BBC, NPR, Reuters)
+                    RSS Feeds
+          (BBC, NPR, Guardian)
 
-               │
-               ▼
+                    │
+                    ▼
 
-      Python Scraper Pipeline
-    - RSS Parsing
-    - Full Article Extraction
-    - Duplicate Detection
-    - Topic Clustering
+        Python Scraper (Flask API)
+        ─────────────────────────
+        • RSS Parsing
+        • Article Extraction
+        • Duplicate Detection
+        • TF-IDF Vectorization
+        • KMeans Clustering
 
-               │
-               ▼
+                    │
+                    ▼
 
-          MongoDB Atlas
+             MongoDB Atlas
 
-               ▲
-               │
+                    ▲
+                    │
 
-        Node.js + Express API
+         Node.js + Express API
 
-               ▲
-               │
+                    ▲
+                    │
 
-       Next.js Frontend
+      Next.js + React Frontend
 ```
 
 ---
 
-# Tech Stack
+# 🛠 Tech Stack
 
 ## Frontend
 
@@ -70,10 +81,11 @@ Video Walkthrough:
 
 ## Python Pipeline
 
+- Flask
 - feedparser
 - newspaper3k
+- BeautifulSoup4
 - scikit-learn
-- BeautifulSoup
 - pymongo
 
 ## Database
@@ -82,85 +94,96 @@ Video Walkthrough:
 
 ---
 
-# Features
+# ✨ Features
 
 - Fetches live news from multiple RSS feeds
 - Extracts complete article content
 - Prevents duplicate articles
 - Automatically groups related news into topic clusters
 - Interactive timeline visualization
-- Cluster detail page
-- Source filtering
-- Manual Refresh button
+- View all articles inside a cluster
+- Filter news by source
+- Refresh news with one click
 - REST API
 - MongoDB persistence
 
 ---
 
-# News Sources
+# 📰 News Sources
 
-The scraper currently uses public RSS feeds from:
+Currently supported RSS feeds:
 
 - BBC News
 - NPR News
-- Reuters
+- The Guardian
 
-(Additional RSS feeds can be added easily.)
-
----
-
-# Topic Grouping Approach
-
-This project uses **TF-IDF + KMeans Clustering**.
-
-### Process
-
-1. Fetch all articles.
-2. Combine title and summary.
-3. Generate TF-IDF vectors.
-4. Cluster similar articles using KMeans.
-5. Generate labels using the top TF-IDF keywords.
-6. Store clustered data in MongoDB.
-
-### Why TF-IDF?
-
-TF-IDF is simple, fast, and works well for grouping articles discussing similar topics without requiring deep NLP models. It also matches one of the recommended approaches in the assessment. :contentReference[oaicite:2]{index=2}
+Additional RSS feeds can easily be added.
 
 ---
 
-# Duplicate Handling
+# 🧠 Topic Clustering Approach
 
-Before inserting an article into MongoDB, the scraper checks whether another article with the same URL already exists.
+The project groups similar news articles using **TF-IDF Vectorization** and **KMeans Clustering**.
 
-This allows the scraper to be executed repeatedly without storing duplicate articles.
+### Workflow
+
+1. Fetch news articles from RSS feeds.
+2. Extract full article content.
+3. Combine article title and content.
+4. Generate TF-IDF vectors.
+5. Cluster similar articles using KMeans.
+6. Generate cluster labels using the highest TF-IDF keywords.
+7. Store clustered data in MongoDB.
+
+### Why TF-IDF + KMeans?
+
+- Fast and lightweight
+- No external AI model required
+- Produces meaningful topic groups
+- Suitable for news clustering
+- Recommended approach for the assignment
 
 ---
 
-# Project Structure
+# 🚫 Duplicate Handling
+
+Before storing a news article, the scraper checks whether another article with the same URL already exists.
+
+If found, the article is skipped.
+
+This allows the scraper to run multiple times without inserting duplicate news.
+
+---
+
+# 📁 Project Structure
 
 ```
 news-pulse/
 
-│
 ├── backend/
+│   ├── config/
 │   ├── controllers/
-│   ├── routes/
 │   ├── models/
+│   ├── routes/
 │   ├── services/
+│   ├── utils/
 │   └── server.js
 │
 ├── frontend/
 │   ├── app/
 │   ├── components/
+│   ├── hooks/
 │   ├── services/
 │   └── styles/
 │
 ├── scraper/
+│   ├── app.py
 │   ├── main.py
-│   ├── extractor.py
 │   ├── cluster.py
 │   ├── database.py
+│   ├── extractor.py
 │   ├── rss.py
+│   ├── config.py
 │   └── requirements.txt
 │
 └── README.md
@@ -168,39 +191,29 @@ news-pulse/
 
 ---
 
-# API Endpoints
+# 🔗 API Endpoints
 
-## Clusters
+## Get All Clusters
 
 ```
 GET /clusters
 ```
 
-Returns all topic clusters.
+Returns all news clusters.
 
 ---
 
-## Cluster Details
+## Get Cluster Details
 
 ```
 GET /clusters/:id
 ```
 
-Returns all articles inside a cluster.
+Returns all articles belonging to a cluster.
 
 ---
 
-## Timeline
-
-```
-GET /timeline
-```
-
-Returns formatted timeline data.
-
----
-
-## Trigger Ingestion
+## Trigger News Refresh
 
 ```
 POST /ingest/trigger
@@ -210,17 +223,17 @@ Starts the Python scraping and clustering pipeline.
 
 ---
 
-## Job Status
+## Check Refresh Status
 
 ```
 GET /ingest/status/:jobId
 ```
 
-Returns the current ingestion job status.
+Returns the ingestion job status.
 
 ---
 
-# Environment Variables
+# ⚙️ Environment Variables
 
 ## Backend
 
@@ -230,27 +243,45 @@ PORT=5000
 MONGO_URI=your_mongodb_connection_string
 ```
 
+---
+
 ## Frontend
 
 ```
 NEXT_PUBLIC_API_URL=http://localhost:5000
 ```
 
+For production:
+
+```
+NEXT_PUBLIC_API_URL=https://news-pulse-sie3.onrender.com
+```
+
 ---
 
-# Installation
+## Scraper
+
+```
+MONGO_URI=your_mongodb_connection_string
+```
+
+---
+
+# 💻 Local Installation
 
 ## Clone Repository
 
-```
-git clone <repository-url>
+```bash
+git clone https://github.com/hariom-p1306/news-pulse.git
+
+cd news-pulse
 ```
 
 ---
 
 ## Backend
 
-```
+```bash
 cd backend
 
 npm install
@@ -262,7 +293,7 @@ npm run dev
 
 ## Frontend
 
-```
+```bash
 cd frontend
 
 npm install
@@ -272,9 +303,9 @@ npm run dev
 
 ---
 
-## Scraper
+## Python Scraper
 
-```
+```bash
 cd scraper
 
 python -m venv venv
@@ -283,97 +314,105 @@ venv\Scripts\activate
 
 pip install -r requirements.txt
 
-python main.py
+python app.py
 ```
 
 ---
 
-# Deployment
+# ☁️ Deployment
 
 | Component | Platform |
-|-----------|----------|
+|------------|----------|
 | Frontend | Vercel |
-| Backend | Render |
+| Backend API | Render |
+| Python Scraper API | Render |
 | Database | MongoDB Atlas |
-| Python Scraper | Triggered via Backend API |
 
-The scraper is executed on demand through the `POST /ingest/trigger` endpoint, which starts the Python pipeline as a subprocess. This matches the deployment approach suggested in the assessment. :contentReference[oaicite:3]{index=3}
-
----
-
-# Challenges Faced
-
-## 1. Duplicate Articles
-
-Problem:
-
-Running the scraper multiple times inserted duplicate news.
-
-Solution:
-
-Checked article URLs before insertion and skipped duplicates.
+The backend triggers the Python scraper through the `/ingest/trigger` endpoint. The scraper runs asynchronously, updates MongoDB, and the frontend polls the backend until the ingestion job is completed.
 
 ---
 
-## 2. Refresh Pipeline
+# 🚧 Challenges Faced
 
-Problem:
+## 1. Duplicate News Articles
 
-The Refresh button completed before scraping finished.
+### Problem
 
-Solution:
+Running the scraper multiple times inserted duplicate articles.
 
-Implemented job status polling to wait for completion before refreshing the UI.
+### Solution
 
----
-
-## 3. Python Environment
-
-Problem:
-
-The backend initially launched the system Python instead of the virtual environment.
-
-Solution:
-
-Configured the backend to execute the scraper using the project's virtual environment.
+Created a unique index on article URLs and skipped existing articles before insertion.
 
 ---
 
-# Limitations
+## 2. News Refresh Synchronization
 
-- Uses KMeans, so the number of clusters must be chosen.
-- Articles discussing the same event using very different wording may end up in separate clusters.
+### Problem
+
+The frontend refreshed before scraping and clustering finished.
+
+### Solution
+
+Implemented job status polling using `/ingest/status/:jobId` to wait until ingestion completed.
+
+---
+
+## 3. Deployment Issues
+
+### Problem
+
+Deploying the Python scraper on Render caused timeout and long-running request issues.
+
+### Solution
+
+Converted the scraper into a Flask API and executed the ingestion process in a background thread to avoid blocking HTTP requests.
+
+---
+
+# ⚠️ Limitations
+
+- KMeans requires the number of clusters to be predefined.
+- Articles using very different wording may end up in different clusters.
 - Source filtering is manual.
-- Timeline currently uses a custom implementation instead of a dedicated chart library.
+- Timeline uses a custom UI instead of a dedicated visualization library.
 
 ---
 
-# Future Improvements
+# 🚀 Future Improvements
 
-- Automatic background refresh
-- Better timeline visualization using Recharts or Vis Timeline
-- Semantic clustering using sentence embeddings
-- Automatic cluster merging across different news sources
-- User authentication
+- Automatic scheduled news refresh
+- Better timeline visualization
+- Semantic clustering using embeddings
 - Search functionality
+- Authentication
+- Bookmark favorite news
+- Category-wise filtering
 
 ---
 
-# Author
+# 👨‍💻 Author
 
 **Hariom Patel**
 
 Backend-Focused Full Stack Developer
 
-GitHub:
+### GitHub
+
 https://github.com/hariom-p1306
 
-LinkedIn:
-(Add your LinkedIn URL)
+### LinkedIn
 
-Email:
-(Add your email)
+https://www.linkedin.com/in/hariom-patel-dev
+
+### Email
+
+hp3432884@gmail.com
 
 ---
 
-Thank you for reviewing this project.
+# 🙏 Acknowledgements
+
+This project was developed for the **Xponentium Full Stack Developer Internship Assessment**.
+
+Thank you for reviewing the project.
