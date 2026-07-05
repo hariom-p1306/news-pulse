@@ -14,7 +14,11 @@ export const triggerIngestion = async (req, res) => {
     try {
 
         const response = await axios.post(
-            "https://news-pulse-1-hcic.onrender.com/run"
+            "https://news-pulse-1-hcic.onrender.com/run",
+            {},
+            {
+                timeout: 60000
+            }
         );
 
         jobs[jobId].status = "completed";
@@ -29,15 +33,21 @@ export const triggerIngestion = async (req, res) => {
 
     } catch (error) {
 
-        console.error(error.message);
+        // console.error("========== AXIOS ERROR ==========");
+        // console.error("Message :", error.message);
+        // console.error("Code :", error.code);
+        // console.error("Status :", error.response?.status);
+        // console.error("Data :", error.response?.data);
+        // console.error("===============================");
+        console.error(error);
 
         jobs[jobId].status = "failed";
 
         res.status(500).json({
             success: false,
-            jobId,
-            status: jobs[jobId].status,
-            message: error.message
+            message: error.message,
+            status: error.response?.status,
+            data: error.response?.data
         });
 
     }

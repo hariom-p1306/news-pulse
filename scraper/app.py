@@ -1,5 +1,6 @@
 from flask import Flask, jsonify
 import threading
+import traceback
 
 from main import run_ingestion
 
@@ -10,7 +11,6 @@ running = False
 
 @app.route("/")
 def home():
-
     return jsonify({
         "message": "News Pulse Scraper API Running"
     })
@@ -21,7 +21,10 @@ def run():
 
     global running
 
+    # print("\n========== /run API HIT ==========")
+
     if running:
+        print("Scraper is already running.")
 
         return jsonify({
             "success": False,
@@ -34,14 +37,31 @@ def run():
 
         running = True
 
+        print("Worker Started...")
+
         try:
-            run_ingestion()
-        except Exception as e:
-            print(e)
 
-        running = False
+            # run_ingestion()
 
-    threading.Thread(target=worker).start()
+            print("Worker Finished Successfully.")
+
+        except Exception:
+
+            print("\n========== ERROR IN WORKER ==========")
+            traceback.print_exc()
+            print("=====================================\n")
+
+        finally:
+
+            running = False
+            print("Worker Stopped.")
+
+    threading.Thread(
+        target=worker,
+        daemon=True
+    ).start()
+
+    print("Returning Response Immediately...\n")
 
     return jsonify({
         "success": True,
@@ -50,4 +70,8 @@ def run():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=10000)
+    app.run(
+        host="0.0.0.0",
+        port=10000,
+        debug=True
+    )
